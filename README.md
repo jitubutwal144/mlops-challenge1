@@ -1,7 +1,7 @@
 # mlops-challenge1
 
 # Project setup
-- Project setup and architecture has been inspired from open source projects such as Tensorflow or keras. Main source of inspiration has been take from this article: (MLOps level 1: ML pipeline automation) [https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning#mlops_level_1_ml_pipeline_automation]
+- Project setup and architecture has been inspired from open source projects such as Tensorflow or keras. Main source of inspiration has been take from this article: [MLOps level 1: ML pipeline automation] (https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning#mlops_level_1_ml_pipeline_automation)
 
 # Models
 - Faulty device detection 
