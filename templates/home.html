@@ -1,0 +1,19 @@
+<html>
+<body>
+    <div class="login">
+       <h1>Faulty device detection system using sensor data</h1>
+   
+       <form action="{{ url_for('predict_datapoint')}}" method="post">
+        <h1>
+            <legend>Faulty device prediction</legend>
+        </h1>
+
+        <div class="mb-3">
+            <input class="btn btn-primary" type="submit" value="Click to preduct using latest sensor data" required />
+        </div>
+    </form>
+    <h2>
+       THE  prediction is {{results}}
+    </h2>
+   <body>
+</html>
