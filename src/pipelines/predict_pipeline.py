@@ -3,7 +3,7 @@ import sys
 
 import pandas as pd
 
-from src.exceptions.exception import CustomException
+from src.exceptions.exception import SensorException
 from src.utils import load_object
 
 
@@ -25,7 +25,7 @@ class PredictPipeline:
             return y_predictions
 
         except Exception as e:
-            raise CustomException(e, sys)
+            raise SensorException(e, sys)
 
 
 class InferenceData:
@@ -40,4 +40,4 @@ class InferenceData:
             inference_df = pd.read_csv(inference_data_path)
             return inference_df
         except Exception as e:
-            raise CustomException(e, sys)
+            raise SensorException(e, sys)

@@ -6,7 +6,7 @@ from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.metrics import r2_score
 
-from src.exceptions.exception import CustomException
+from src.exceptions.exception import SensorException
 from src.logger import logging
 from src.utils import evaluate_model
 from src.utils import save_object
@@ -65,7 +65,7 @@ class ModelTrainer:
             best_model = models[best_model_name]
 
             if best_model_score < 0.6:
-                raise CustomException("Best model not found")
+                raise SensorException("Best model not found")
 
             logging.info(f"Found best model: {best_model_name}")
 
@@ -79,4 +79,4 @@ class ModelTrainer:
             return r2_square
 
         except Exception as e:
-            raise CustomException(e, sys)
+            raise SensorException(e, sys)

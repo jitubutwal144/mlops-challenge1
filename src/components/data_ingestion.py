@@ -1,77 +1,111 @@
 import os
 import sys
-from dataclasses import dataclass
-from typing import Tuple
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from src.exceptions.exception import CustomException
+from src.data_clients.sensor_data import SensorData
+from src.entities.artifact_entity import DataIngestionArtifact
+from src.entities.config_entity import DataIngestionConfig
+from src.entities.config_entity import TrainingPipelineConfig
+from src.exceptions.exception import SensorException
 from src.logger import logging
 
-from .data_transformation import DataTransformation
+# from .data_transformation import DataTransformation
 
 
 # from .model_trainer import ModelTrainer
-@dataclass
-class DataIngestionConfig:
-    train_data_path = os.path.join("artifacts", "train.csv")
-    test_data_path = os.path.join("artifacts", "test.csv")
-    raw_data_path = os.path.join("artifacts", "data.csv")
-    sensor_data_path = "notebooks/data/historical_sensor_data.csv"
-
-
 class DataIngestion:
-    def __init__(self) -> None:
-        self.ingestion_config = DataIngestionConfig()
-
-    def initiate_data_ingestion(self) -> Tuple[str, str]:
-        logging.info("Initiating data ingestion")
+    def __init__(self, data_ingestion_config: DataIngestionConfig):
         try:
-            # TODO: use data manager to read data from source
-            df = pd.read_csv(self.ingestion_config.sensor_data_path)
-            os.makedirs(
-                os.path.dirname(self.ingestion_config.train_data_path),
-                exist_ok=True,
+            self.data_ingestion_config = data_ingestion_config
+        except Exception as e:
+            raise SensorException(e, sys)
+
+    def export_data_into_feature_store(self) -> pd.DataFrame:
+        """
+        Export sensor data record as data frame into feature
+        """
+        try:
+            logging.info("Exporting data from csv to feature store")
+            sensor_data = SensorData()
+            dataframe = sensor_data.get_historical_data_as_dataframe()
+            feature_store_file_path = (
+                self.data_ingestion_config.feature_store_file_path
             )
 
-            df.to_csv(
-                self.ingestion_config.raw_data_path, index=False, header=True
-            )
-            logging.info("Saved raw data into artifacts")
+            # creating folder
+            dir_path = os.path.dirname(feature_store_file_path)
+            os.makedirs(dir_path, exist_ok=True)
+            dataframe.to_csv(feature_store_file_path, index=False, header=True)
+            return dataframe
+        except Exception as e:
+            raise SensorException(e, sys)
 
-            logging.info("Initiated train test split")
+    def split_data_as_train_test(self, dataframe: pd.DataFrame) -> None:
+        """
+        Feature store dataset will be split into train and test file
+        """
+
+        try:
             train_set, test_set = train_test_split(
-                df, test_size=0.3, random_state=99
+                dataframe,
+                test_size=self.data_ingestion_config.train_test_split_ratio,
             )
+
+            logging.info("Performed train test split on the dataframe")
+
+            logging.info(
+                "Exited split_data_as_train_test method of Data_Ingestion class"
+            )
+
+            dir_path = os.path.dirname(
+                self.data_ingestion_config.training_file_path
+            )
+
+            os.makedirs(dir_path, exist_ok=True)
+
+            logging.info("Exporting train and test file path.")
 
             train_set.to_csv(
-                self.ingestion_config.train_data_path, index=False, header=True
+                self.data_ingestion_config.training_file_path,
+                index=False,
+                header=True,
             )
-            logging.info("Saved train data into artifacts")
 
             test_set.to_csv(
-                self.ingestion_config.test_data_path, index=False, header=True
-            )
-            logging.info("Saved test data into artifacts")
-
-            return (
-                self.ingestion_config.train_data_path,
-                self.ingestion_config.test_data_path,
+                self.data_ingestion_config.testing_file_path,
+                index=False,
+                header=True,
             )
 
+            logging.info("Exported train and test file path.")
         except Exception as e:
-            raise CustomException(e, sys)
+            raise SensorException(e, sys)
+
+    def initiate_data_ingestion(self) -> DataIngestionArtifact:
+        try:
+            dataframe = self.export_data_into_feature_store()
+            self.split_data_as_train_test(dataframe=dataframe)
+            data_ingestion_artifact = DataIngestionArtifact(
+                trained_file_path=self.data_ingestion_config.training_file_path,
+                test_file_path=self.data_ingestion_config.testing_file_path,
+            )
+            return data_ingestion_artifact
+        except Exception as e:
+            raise SensorException(e, sys)
 
 
 if __name__ == "__main__":
-    ingestion_obj = DataIngestion()
-    train_data_path, test_data_path = ingestion_obj.initiate_data_ingestion()
+    train_pipeline_config = TrainingPipelineConfig()
+    ingestion_config = DataIngestionConfig(train_pipeline_config)
+    ingestion_obj = DataIngestion(ingestion_config)
+    ingestion_artifacts = ingestion_obj.initiate_data_ingestion()
 
-    data_transformer = DataTransformation()
-    train_arr, test_arr, _ = data_transformer.initiate_data_transformation(
-        train_data_path, test_data_path
-    )
+    # data_transformer = DataTransformation()
+    # train_arr, test_arr, _ = data_transformer.initiate_data_transformation(
+    #     train_data_path, test_data_path
+    # )
 
     # model_trainer = ModelTrainer()
     # model_trainer.initiate_model_trainer(train_arr, test_arr)
