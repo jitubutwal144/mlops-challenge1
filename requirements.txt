@@ -2,3 +2,8 @@ pandas
 scikit-learn
 matplotlib
 flask
+black>=22
+flake8
+isort
+pytest
+pytest-cov

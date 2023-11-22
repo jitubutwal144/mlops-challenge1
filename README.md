@@ -40,3 +40,9 @@
 - Simplicity and easy maintainability considering other old or new team members
 - As much automation as possible except critical usecase i.e 90% automation
 - Modularity - easy to integrate, replace or remove components
+
+# Code formatting, linting
+- isort: isort is a Python utility / library to sort imports alphabetically, and automatically separated into sections  and by type. 
+- flake8: it is a Python linting tool that checks your Python codebase for errors, styling issues and complexity
+- back formatter: Black is the uncompromising Python code formatter. Format when file is saved. 
+Or format individual file eg. black src/components/model_trainer.py 
