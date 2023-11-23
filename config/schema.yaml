@@ -1,0 +1,8 @@
+columns:
+  - sensor_1
+  - sensor_2
+  - label
+
+numerical_columns:
+  - sensor_1
+  - sensor_2
