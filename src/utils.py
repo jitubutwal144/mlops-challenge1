@@ -50,15 +50,6 @@ def evaluate_model(X_train, y_train, X_test, y_test, models, params):
         raise SensorException(e, sys)
 
 
-def load_object(file_path):
-    try:
-        with open(file_path, "rb") as file_obj:
-            return pickle.load(file_obj)
-
-    except Exception as e:
-        raise SensorException(e, sys)
-
-
 def read_yaml_file(file_path: str) -> dict:
     try:
         with open(file_path, "rb") as yaml_file:
@@ -92,5 +83,28 @@ def save_numpy_array_data(file_path: str, array: np.array) -> None:
         os.makedirs(dir_path, exist_ok=True)
         with open(file_path, "wb") as file_obj:
             np.save(file_obj, array)
+    except Exception as e:
+        raise SensorException(e, sys) from e
+
+
+def load_numpy_array_data(file_path: str) -> np.array:
+    """
+    load numpy array data from file
+    file_path: str location of file to load
+    return: np.array data loaded
+    """
+    try:
+        with open(file_path, "rb") as file_obj:
+            return np.load(file_obj)
+    except Exception as e:
+        raise SensorException(e, sys) from e
+
+
+def load_object(file_path: str) -> object:
+    try:
+        if not os.path.exists(file_path):
+            raise Exception(f"The file: {file_path} does not exists")
+        with open(file_path, "rb") as file_obj:
+            return pickle.load(file_obj)
     except Exception as e:
         raise SensorException(e, sys) from e
