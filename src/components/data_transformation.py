@@ -1,107 +1,132 @@
-import os
 import sys
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from src.constants.training_pipeline import TARGET_COLUMN
+from src.entities.artifact_entity import DataTransformationArtifact
+from src.entities.artifact_entity import DataValidationArtifact
+from src.entities.config_entity import DataTransformationConfig
 from src.exceptions.exception import SensorException
 from src.logger import logging
+from src.utils import save_numpy_array_data
 from src.utils import save_object
 
 
-@dataclass
-class DataTransformationConfig:
-    """
-    Holds configs required for data transformation steps.
-    """
-
-    # TODO: preprocessor with parquet file
-    preprocessor_obj_file_path = os.path.join("artifacts", "preprocessor.pkl")
-
-
 class DataTransformation:
-    def __init__(self):
-        self.data_transformation_config = DataTransformationConfig()
-
-    def get_data_transformer_object(self):
+    def __init__(
+        self,
+        data_validation_artifact: DataValidationArtifact,
+        data_transformation_config: DataTransformationConfig,
+    ):
         """
-        - Check numerical values vs categorical values(does not exist)
-        - Handle missing values using simple imputer
-        - Handle categorical features using one hot encoding and scaling feature values if reuqired
+        :param1 data_validation_artifact: Output reference of data ingestion artifact stage
+        :param2 data_transformation_config: configuration for data transformation
         """
         try:
-            numerical_columns = ["sensor_1", "sensor_2"]
+            self.data_validation_artifact = data_validation_artifact
+            self.data_transformation_config = data_transformation_config
 
-            # Data transformation for numerical features
-            numerical_pipeline = Pipeline(
+        except Exception as e:
+            raise SensorException(e, sys)
+
+    @staticmethod
+    def read_data(file_path) -> pd.DataFrame:
+        try:
+            return pd.read_csv(file_path)
+        except Exception as e:
+            raise SensorException(e, sys)
+
+    @classmethod
+    def get_data_transformer_object(cls) -> Pipeline:
+        try:
+            standard_scaler = StandardScaler()
+            simple_imputer = SimpleImputer(strategy="median")
+            preprocessor = Pipeline(
                 steps=[
-                    ("imputer", SimpleImputer(strategy="median")),
-                    ("scaler", StandardScaler()),
-                ]
-            )
-
-            logging.info(f"Numerical features: {numerical_columns}")
-
-            preprocessor = ColumnTransformer(
-                [
-                    ("num_pipeline", numerical_pipeline, numerical_columns),
+                    (
+                        "Imputer",
+                        simple_imputer,
+                    ),
+                    (
+                        "StandardScaler",
+                        standard_scaler,
+                    ),  # keep every feature in same range and handle outlier
                 ]
             )
 
             return preprocessor
+
         except Exception as e:
-            raise SensorException(e, sys)
+            raise SensorException(e, sys) from e
 
-    def initiate_data_transformation(self, train_path, test_path):
+    def initiate_data_transformation(
+        self,
+    ) -> DataTransformationArtifact:
         try:
-            traget_column_name = "label"
-            preprocessing_obj = self.get_data_transformer_object()
+            train_df = DataTransformation.read_data(
+                self.data_validation_artifact.valid_train_file_path
+            )
+            test_df = DataTransformation.read_data(
+                self.data_validation_artifact.valid_test_file_path
+            )
+            preprocessor = self.get_data_transformer_object()
 
-            train_df = pd.read_csv(train_path)
-            test_df = pd.read_csv(test_path)
-
+            # training dataframe
             input_feature_train_df = train_df.drop(
-                columns=[traget_column_name], axis=1
+                columns=[TARGET_COLUMN], axis=1
             )
-            target_feature_train_df = train_df[traget_column_name]
+            target_feature_train_df = train_df[TARGET_COLUMN]
 
+            # testing dataframe
             input_feature_test_df = test_df.drop(
-                columns=[traget_column_name], axis=1
+                columns=[TARGET_COLUMN], axis=1
             )
-            target_feature_test_df = test_df[traget_column_name]
+            target_feature_test_df = test_df[TARGET_COLUMN]
 
-            input_feature_train_arr = preprocessing_obj.fit_transform(
+            # fit training feature data into data preprocssor
+            preprocessor_object = preprocessor.fit(input_feature_train_df)
+            transformed_input_train_feature = preprocessor_object.transform(
                 input_feature_train_df
             )
-            input_feature_test_arr = preprocessing_obj.transform(
+            transformed_input_test_feature = preprocessor_object.transform(
                 input_feature_test_df
             )
 
-            # Convert to numpy array
             train_arr = np.c_[
-                input_feature_train_arr,
+                transformed_input_train_feature,
                 np.array(target_feature_train_df),
             ]
-
             test_arr = np.c_[
-                input_feature_test_arr, np.array(target_feature_test_df)
+                transformed_input_test_feature, np.array(target_feature_test_df)
             ]
 
+            # save numpy array data
+            save_numpy_array_data(
+                self.data_transformation_config.transformed_train_file_path,
+                array=train_arr,
+            )
+            save_numpy_array_data(
+                self.data_transformation_config.transformed_test_file_path,
+                array=test_arr,
+            )
             save_object(
-                file_path=self.data_transformation_config.preprocessor_obj_file_path,
-                obj=preprocessing_obj,
+                self.data_transformation_config.transformed_object_file_path,
+                preprocessor_object,
             )
 
-            return (
-                train_arr,
-                test_arr,
-                self.data_transformation_config.preprocessor_obj_file_path,
+            # preparing artifact
+            data_transformation_artifact = DataTransformationArtifact(
+                transformed_object_file_path=self.data_transformation_config.transformed_object_file_path,
+                transformed_train_file_path=self.data_transformation_config.transformed_train_file_path,
+                transformed_test_file_path=self.data_transformation_config.transformed_test_file_path,
             )
-
+            logging.info(
+                f"Data transformation artifact: {data_transformation_artifact}"
+            )
+            return data_transformation_artifact
         except Exception as e:
-            raise SensorException(e, sys)
+            raise SensorException(e, sys) from e

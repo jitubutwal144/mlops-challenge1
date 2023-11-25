@@ -2,6 +2,7 @@ pandas
 scikit-learn
 matplotlib
 flask
+pyyaml
 black>=22
 flake8
 isort

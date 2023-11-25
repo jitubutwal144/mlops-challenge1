@@ -157,8 +157,8 @@ class DataValidation:
 
 
 if __name__ == "__main__":
-    train_file_path = ""
-    test_file_path = ""
+    train_file_path = "artifacts/train.csv"
+    test_file_path = "artifacts/test.csv"
     train_pipeline_config = TrainingPipelineConfig()
     data_ingestion_artifacts = DataIngestionArtifact(
         train_file_path, test_file_path
