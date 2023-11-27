@@ -68,8 +68,13 @@ The project setup and architecture draw inspiration from prominent open-source p
 - Implement proper exception handling and log critical activities.
 - Conduct unit tests for both ML code and infrastructure code.
 
+Currently, no dependency management tool is in use. However, there is an opportunity for improvement by incorporating the Poetry tool for enhanced packaging and dependency management.
 
 ## Code Formatting and Linting
 - isort: isort is a Python utility/library designed to alphabetically sort imports. It automatically separates imports into sections and organizes them by type.
 - flake8: flake8 is a Python linting tool that examines your Python codebase for errors, style issues, and complexity.
 - Black: Black is an uncompromising Python code formatter. It automatically formats code when a file is saved. You can also format individual files, for example, black src/components/model_trainer.py.
+
+## Dependency management enhancement
+- Currently, no dependency management tool is in use. However, there is an opportunity for improvement by incorporating the Poetry tool for enhanced packaging and dependency management.
+
