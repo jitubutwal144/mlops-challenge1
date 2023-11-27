@@ -11,8 +11,6 @@ from src.entities.config_entity import TrainingPipelineConfig
 from src.exceptions.exception import SensorException
 from src.logger import logging
 
-# from .data_transformation import DataTransformation
-
 
 # from .model_trainer import ModelTrainer
 class DataIngestion:

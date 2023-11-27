@@ -10,7 +10,7 @@ variable "model_bucket_name" {
 
 variable "aws_account_id" {
   type    = string
-  default = "566373416292"
+  default = "FILL_ME"
 }
 
 variable "force_destroy_bucket" {
