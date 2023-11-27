@@ -14,6 +14,7 @@ class PredictPipeline:
     def predict(self, features):
         try:
             # TODO: get laster model and preprocessor from another responsible class
+            # TODO: Remove harcoded artifacts name, inject them as a configs
             model_path = os.path.join("artifacts", "model.pkl")
             preprocessor_path = os.path.join("artifacts", "preprocessor.pkl")
             model = load_object(file_path=model_path)
@@ -37,6 +38,8 @@ class InferenceData:
             inference_data_path = os.path.join(
                 "artifacts", "inference_sensor_data.csv"
             )
+            # TODO: optimize all read file operations using Adapter pattern. Eg
+            # create Reader.read(new CSVReader() OR new ParquetReader() or new JSONReader())
             inference_df = pd.read_csv(inference_data_path)
             return inference_df
         except Exception as e:
